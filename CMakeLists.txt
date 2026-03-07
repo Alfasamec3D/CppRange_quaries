@@ -10,15 +10,15 @@ enable_testing()
 
 find_package(GTest REQUIRED)
 
+add_library(trees STATIC src/trees.cpp)
+
+target_include_directories(trees PUBLIC "include")
+
 add_executable(main main.cpp)
 
-add_executable(tests tests/tests.cpp)
-
-add_library(trees src/trees.cpp)
-
-include_directories("include")
-
 target_link_libraries (main PRIVATE trees)
+
+add_executable(tests tests/tests.cpp)
 
 target_link_libraries(tests PRIVATE trees gtest gtest_main)
 
