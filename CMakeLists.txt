@@ -18,8 +18,8 @@ add_library(trees src/trees.cpp)
 
 include_directories("include")
 
-target_link_libraries (main trees)
+target_link_libraries (main PRIVATE trees)
 
-target_link_libraries(tests trees gtest gtest_main)
+target_link_libraries(tests PRIVATE trees gtest gtest_main)
 
 add_test(NAME TreeEndTest COMMAND tests)
