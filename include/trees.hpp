@@ -15,6 +15,7 @@ class SearchTree;
 
 template <typename KeyT>
 int range_query(const SearchTree<KeyT>& s, const KeyT& fst, const KeyT& snd) {
+  if (!s.top) return 0;
   int result{0};
   s.count(result, s.top, fst, snd);
   return result;
