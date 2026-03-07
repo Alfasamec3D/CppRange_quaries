@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-project("Range_quaries")
+project("Range_quaries" LANGUAGES CXX)
 
 
 enable_testing()
