@@ -15,7 +15,7 @@
 
 ## How to test
 
-1. In terminal use `build/tests` command.
+1. In terminal use `ctest --test-dir build/tests` command.
 2. See the results of the test.
 
 ## How to run
