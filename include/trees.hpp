@@ -16,8 +16,18 @@ class SearchTree;
 template <typename KeyT>
 int range_query(const SearchTree<KeyT>& s, const KeyT& fst, const KeyT& snd) {
   if (!s.top) return 0;
-  int result{0};
-  s.count(result, s.top, fst, snd);
+  int result = 0;
+  std::vector<const typename SearchTree<KeyT>::Node*> stack;
+  stack.push_back(s.top);
+  while (!stack.empty()) {
+    const typename SearchTree<KeyT>::Node* current = stack.back();
+    stack.pop_back();
+    if (current->key_ >= fst && current->key_ <= snd) ++result;
+
+    if (current->left_ && current->key_ > fst) stack.push_back(current->left_);
+    if (current->right_ && current->key_ < snd)
+      stack.push_back(current->right_);
+  }
   return result;
 }
 
@@ -72,26 +82,6 @@ class SearchTree {
                                          const Trees::SearchTree<KeyT>& tree);
 
  private:
-  void count(int& counter, const Node* node, const KeyT& key1,
-             const KeyT& key2) const {
-    if (node->key_ >= key1 && node->key_ <= key2) {
-      counter++;
-      if (node->left_) {
-        count(counter, node->left_, key1, key2);
-      }
-      if (node->right_) {
-        count(counter, node->right_, key1, key2);
-      }
-    }
-    if (node->key_ < key1 && node->right_) {
-      count(counter, node->right_, key1, key2);
-    }
-    if (node->key_ > key2 && node->left_) {
-      count(counter, node->left_, key1, key2);
-    }
-    return;
-  }
-
   Node* recur_insert(Node* node, const KeyT& key) {
     if (node == nullptr) return new Node{key};
     if (key < node->key_)
