@@ -1,7 +1,7 @@
 #include "trees.hpp"
 
 int main() {
-  Trees::SearchTree<int> tree{};
+  Trees::SearchTree<int> tree;
   char mode;
   int key, key1, key2;
   while (std::cin >> mode) {

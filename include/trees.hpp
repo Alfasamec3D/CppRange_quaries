@@ -77,18 +77,18 @@ class SearchTree {
 
  public:
   void insert(const KeyT& key) {
-    Node* z = new Node{key};
     Node* y = nullptr;
     Node* x = top_;
     while (x) {
       y = x;
-      if (z->key_ < x->key_)
+      if (key < x->key_)
         x = x->left_;
-      else if (z->key_ > x->key_)
+      else if (key > x->key_)
         x = x->right_;
       else
         return;
     }
+    Node* z = new Node{key};
     z->parent_ = y;
     if (!y)
       top_ = z;
@@ -103,6 +103,84 @@ class SearchTree {
                                const KeyT& snd);
   friend std::ostream& operator<< <KeyT>(std::ostream& os,
                                          const Trees::SearchTree<KeyT>& tree);
+
+  SearchTree() = default;
+
+  ~SearchTree() {
+    if (!top_) return;
+
+    std::vector<Node*> stack;
+    stack.push_back(top_);
+
+    while (!stack.empty()) {
+      Node* current = stack.back();
+      stack.pop_back();
+
+      if (current->right_) stack.push_back(current->right_);
+      if (current->left_) stack.push_back(current->left_);
+
+      delete current;
+    }
+  }
+
+  SearchTree(const SearchTree& other) {
+    if (!other.top_) {
+      top_ = nullptr;
+      return;
+    }
+    top_ = new Node(other.top_->key_);
+    top_->color_ = other.top_->color_;
+    top_->height = other.top_->height_;
+
+    std::vector<std::pair<const Node*, Node*>> stack;
+    stack.push_back({other.top_, top_});
+
+    while (!stack.empty()) {
+      auto pair = stack.back();
+      stack.pop_back();
+
+      const Node* src = pair.first;
+      Node* dest = pair.second;
+
+      if (src->right_) {
+        dest->right_ = new Node(src->right_->key_);
+        dest->right_->color_ = src->right_->color_;
+        dest->right_->height_ = src->right->height;
+        dest->right_->parent_ = dest;
+
+        stack.push_back({src->right_, dest->right_});
+      }
+
+      if (src->left_) {
+        dest->left_ = new Node(src->left_->key_);
+        dest->left_->color_ = src->left_->color_;
+        dest->left_->height_ = src->left_->height_;
+        dest->left_->parent_ = dest;
+
+        stack.push_back({src->left_, dest->left_});
+      }
+    }
+  }
+
+  SearchTree& operator=(const SearchTree& other) {
+    if (this == &other) return *this;
+    SearchTree temp{other};
+    std::swap(top_, temp.top_);
+    return *this;
+  }
+
+  SearchTree(SearchTree&& other) noexcept : top_(other.top_) {
+    other.top_ = nullptr;
+  }
+
+  SearchTree& operator=(SearchTree&& other) noexcept {
+    if (this == &other) return *this;
+
+    destroy_tree(top_);
+    top_ = other.top_;
+    other.top_ = nullptr;
+    return *this;
+  }
 
  private:
   void insert_fixup(Node* z) {
@@ -157,6 +235,7 @@ class SearchTree {
     }
     top_->color_ = Black;
   }
+
   void rightRotate(Node* y) {
     if (!y) return;
     Node* x = y->left_;
