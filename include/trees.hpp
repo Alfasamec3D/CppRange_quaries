@@ -32,28 +32,6 @@ int range_query(const SearchTree<KeyT>& s, const KeyT& fst, const KeyT& snd) {
 }
 
 template <typename KeyT>
-std::ostream& operator<<(std::ostream& os,
-                         const Trees::SearchTree<KeyT>& tree) {
-  int rows = tree.top_->height_ + 1;
-  int cols = std::pow(2, tree.top_->height_ + 1) - 1;
-  std::vector<std::vector<std::string>> ans(rows,
-                                            std::vector<std::string>(cols, ""));
-
-  tree.inorder(tree.top_, 0, (cols - 1) / 2, ans);
-
-  for (auto& row : ans) {
-    for (auto& cell : row) {
-      if (cell.empty())
-        os << std::setw(6) << ' ';
-      else
-        os << std::setw(6) << cell;
-    }
-    os << std::endl;
-  }
-  return os;
-}
-
-template <typename KeyT>
 class SearchTree {
   enum Node_color { Red, Black };
   struct Node {
@@ -76,52 +54,9 @@ class SearchTree {
   Node* top_ = nullptr;
 
  public:
-  void insert(const KeyT& key) {
-    Node* y = nullptr;
-    Node* x = top_;
-    while (x) {
-      y = x;
-      if (key < x->key_)
-        x = x->left_;
-      else if (key > x->key_)
-        x = x->right_;
-      else
-        return;
-    }
-    Node* z = new Node{key};
-    z->parent_ = y;
-    if (!y)
-      top_ = z;
-    else if (z->key_ < y->key_)
-      y->left_ = z;
-    else
-      y->right_ = z;
-    insert_fixup(z);
-  }
-
-  friend int range_query<KeyT>(const SearchTree<KeyT>& s, const KeyT& fst,
-                               const KeyT& snd);
-  friend std::ostream& operator<< <KeyT>(std::ostream& os,
-                                         const Trees::SearchTree<KeyT>& tree);
-
   SearchTree() = default;
 
-  ~SearchTree() {
-    if (!top_) return;
-
-    std::vector<Node*> stack;
-    stack.push_back(top_);
-
-    while (!stack.empty()) {
-      Node* current = stack.back();
-      stack.pop_back();
-
-      if (current->right_) stack.push_back(current->right_);
-      if (current->left_) stack.push_back(current->left_);
-
-      delete current;
-    }
-  }
+  ~SearchTree() { destroy_tree(*this); }
 
   SearchTree(const SearchTree& other) {
     if (!other.top_) {
@@ -130,7 +65,7 @@ class SearchTree {
     }
     top_ = new Node(other.top_->key_);
     top_->color_ = other.top_->color_;
-    top_->height = other.top_->height_;
+    top_->height_ = other.top_->height_;
 
     std::vector<std::pair<const Node*, Node*>> stack;
     stack.push_back({other.top_, top_});
@@ -145,7 +80,7 @@ class SearchTree {
       if (src->right_) {
         dest->right_ = new Node(src->right_->key_);
         dest->right_->color_ = src->right_->color_;
-        dest->right_->height_ = src->right->height;
+        dest->right_->height_ = src->right_->height_;
         dest->right_->parent_ = dest;
 
         stack.push_back({src->right_, dest->right_});
@@ -176,13 +111,56 @@ class SearchTree {
   SearchTree& operator=(SearchTree&& other) noexcept {
     if (this == &other) return *this;
 
-    destroy_tree(top_);
+    destroy_tree(*this);
     top_ = other.top_;
     other.top_ = nullptr;
     return *this;
   }
 
+  void insert(const KeyT& key) {
+    Node* y = nullptr;
+    Node* x = top_;
+    while (x) {
+      y = x;
+      if (key < x->key_)
+        x = x->left_;
+      else if (key > x->key_)
+        x = x->right_;
+      else
+        return;
+    }
+    Node* z = new Node{key};
+    z->parent_ = y;
+    if (!y)
+      top_ = z;
+    else if (z->key_ < y->key_)
+      y->left_ = z;
+    else
+      y->right_ = z;
+    insert_fixup(z);
+  }
+
+  friend int range_query<KeyT>(const SearchTree<KeyT>& s, const KeyT& fst,
+                               const KeyT& snd);
+
  private:
+  void destroy_tree(SearchTree& tree) {
+    if (!tree.top_) return;
+
+    std::vector<Node*> stack;
+    stack.push_back(tree.top_);
+
+    while (!stack.empty()) {
+      Node* current = stack.back();
+      stack.pop_back();
+
+      if (current->right_) stack.push_back(current->right_);
+      if (current->left_) stack.push_back(current->left_);
+
+      delete current;
+    }
+  }
+
   void insert_fixup(Node* z) {
     while (z->parent_ && z->parent_->color_ == Red) {
       if (z->parent_ == z->parent_->parent_->left_) {
@@ -285,16 +263,5 @@ class SearchTree {
     x->height_ = x->get_height();
     y->height_ = y->get_height();
   }
-
-  void inorder(const Node* node, const int& row, const int& col,
-               std::vector<std::vector<std::string>>& ans) const {
-    if (!node) return;
-    int offset = std::pow(2, top_->height_ - row - 1);
-    if (node->left_) inorder(node->left_, row + 1, col - offset, ans);
-    ans[row][col] = std::to_string(node->key_);
-    if (node->right_) inorder(node->right_, row + 1, col + offset, ans);
-  }
 };
 }  // namespace Trees
-
-void end();

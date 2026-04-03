@@ -6,7 +6,9 @@ include(GoogleTest)
 
 add_executable(unit_test unit/unit_test.cpp)
 
-target_link_libraries(unit_test PRIVATE trees GTest::gtest_main)
+target_include_directories(unit_test PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
+target_link_libraries(unit_test PRIVATE GTest::gtest_main)
 
 gtest_discover_tests(unit_test)
 
